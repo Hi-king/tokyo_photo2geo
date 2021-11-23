@@ -18,6 +18,14 @@ python-versions = ">=3.5.0"
 unicode_backport = ["unicodedata2"]
 
 [[package]]
+name = "colorama"
+version = "0.4.4"
+description = "Cross-platform colored terminal text."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
 name = "fire"
 version = "0.4.0"
 description = "A library for automatically generating command line interfaces."
@@ -123,6 +131,57 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "torch"
+version = "1.10.0"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+category = "main"
+optional = false
+python-versions = ">=3.6.2"
+
+[package.dependencies]
+typing-extensions = "*"
+
+[[package]]
+name = "torchvision"
+version = "0.11.1"
+description = "image and video datasets and models for torch deep learning"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+pillow = ">=5.3.0,<8.3.0 || >8.3.0"
+torch = "1.10.0"
+
+[package.extras]
+scipy = ["scipy"]
+
+[[package]]
+name = "tqdm"
+version = "4.62.3"
+description = "Fast, Extensible Progress Meter"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
+telegram = ["requests"]
+
+[[package]]
+name = "typing-extensions"
+version = "4.0.0"
+description = "Backported and Experimental Type Hints for Python 3.6+"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "urllib3"
 version = "1.26.7"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -138,7 +197,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.11"
-content-hash = "ea2af5dd5aca35f1f4033798789b55b4199bfa0b10b9ca18cb36a671e7ac1f51"
+content-hash = "7026f3389681ba776015882d5ac340192652e3e74016a66806e8cb3da8ba3315"
 
 [metadata.files]
 certifi = [
@@ -148,6 +207,10 @@ certifi = [
 charset-normalizer = [
     {file = "charset-normalizer-2.0.7.tar.gz", hash = "sha256:e019de665e2bcf9c2b64e2e5aa025fa991da8720daa3c1138cadd2fd1856aed0"},
     {file = "charset_normalizer-2.0.7-py3-none-any.whl", hash = "sha256:f7af805c321bfa1ce6714c51f254e0d5bb5e5834039bc17db7ebe3a4cec9492b"},
+]
+colorama = [
+    {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
+    {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
 fire = [
     {file = "fire-0.4.0.tar.gz", hash = "sha256:c5e2b8763699d1142393a46d0e3e790c5eb2f0706082df8f647878842c216a62"},
@@ -275,6 +338,52 @@ six = [
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},
+]
+torch = [
+    {file = "torch-1.10.0-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:56022b0ce94c54e95a2f63fc5a1494feb1fc3d5c7a9b35a62944651d03edef05"},
+    {file = "torch-1.10.0-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:13e1ffab502aa32d6841a018771b47028d02dbbc685c5b79cfd61db5464dae4e"},
+    {file = "torch-1.10.0-cp36-cp36m-win_amd64.whl", hash = "sha256:3c0a942e0df104c80b0eedc30d2a19cdc3d28601bc6e280bf24b2e6255016d3b"},
+    {file = "torch-1.10.0-cp36-none-macosx_10_9_x86_64.whl", hash = "sha256:eea16c01af1980ba709c00e8d5e6c09bedb5b30f9fa2085f6a52a78d7dc4e125"},
+    {file = "torch-1.10.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:b812e8d40d7037748da40bb695bd849e7b2e7faad4cd06df53d2cc4531926fda"},
+    {file = "torch-1.10.0-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:034df0b20603bfc81325094586647302891b9b20be7e36f152c7dd6af00deac1"},
+    {file = "torch-1.10.0-cp37-cp37m-win_amd64.whl", hash = "sha256:67fc509e207b8e7330f2e76e77800950317d31d035a4d19593db991962afead4"},
+    {file = "torch-1.10.0-cp37-none-macosx_10_9_x86_64.whl", hash = "sha256:4499055547087d7ef7e8a754f09c2c4f1470297ae3e5490363dba66c75501b21"},
+    {file = "torch-1.10.0-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:ab0cf330714c8f79a837c04784a7a5658b014cf5a4ca527e7b710155ae519cdf"},
+    {file = "torch-1.10.0-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:e01ba5946267014abfdb30248bcdbd457aaa20cff749febe7fc191e5ae096af4"},
+    {file = "torch-1.10.0-cp38-cp38-win_amd64.whl", hash = "sha256:9013002adcb42bac05dcdbf0a03dd9f6bb5d7ab8b9817041c1176a014870786b"},
+    {file = "torch-1.10.0-cp38-none-macosx_10_9_x86_64.whl", hash = "sha256:aef7afb62e9b174b4e0e5e1e4a42e3bab3b8490a668d666f62f7d4517559fbf2"},
+    {file = "torch-1.10.0-cp38-none-macosx_11_0_arm64.whl", hash = "sha256:d6185827b285780653cdd81d77a09fdca76a5b190d5986d552be2a5c442cfaa4"},
+    {file = "torch-1.10.0-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:d82e68302c9b5c76ed585e04d61be0ca2184f70cb8ffeba8610570609ad5d7c9"},
+    {file = "torch-1.10.0-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:e5822200bf80a1495ad98a2bb41803eeba4a85ce373e35fc65765f7f888f5374"},
+    {file = "torch-1.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:ca2c88fa4376e2648785029ab108e6e7abd784eb6535fc6036004b9254f9f7c1"},
+    {file = "torch-1.10.0-cp39-none-macosx_10_9_x86_64.whl", hash = "sha256:d6ef87470b44df9970e84542547d5ba7720bb89616602441df555a39b124e2bc"},
+    {file = "torch-1.10.0-cp39-none-macosx_11_0_arm64.whl", hash = "sha256:eea675ec01ec4b4a0655fd2984f166a5ca3b933dae6ad4eb4e52eba7026dc176"},
+]
+torchvision = [
+    {file = "torchvision-0.11.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:597d82e9b186f59695ea19ff96d4b46b74f0be52227b0a77d7cf9a9d20e6801c"},
+    {file = "torchvision-0.11.1-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:b56285c3da0abd11cdf86cad82c4aebbb57ab6975673a4f87d686c612dda66b7"},
+    {file = "torchvision-0.11.1-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:75ea4c021e348315a655b3f94734d9ddaf5650a7ace53759dff38a13469c7cfa"},
+    {file = "torchvision-0.11.1-cp36-cp36m-win_amd64.whl", hash = "sha256:0c3bb474e298f3655f419e0f13a0c1ca0ef89f43e0f3f7b7ef603f3f1728543a"},
+    {file = "torchvision-0.11.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:1fde05a1cc41f1fa3771723aad2435eb745513534209e51b349b009769895586"},
+    {file = "torchvision-0.11.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:3c1ba63eaf36d8dff7e0326dc61a73dbb100530ad4231c56427002689cada00b"},
+    {file = "torchvision-0.11.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:f0be815759290ad81cafdab17973b040f8317fc59c740ad67948ebb9271e763c"},
+    {file = "torchvision-0.11.1-cp37-cp37m-win_amd64.whl", hash = "sha256:7d28c1cd3f8f470c5faf46b426969d9db1113aa9414fc5a3056e20c7cf91a746"},
+    {file = "torchvision-0.11.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:73fae784c31a5ec7ddddefe0ba36ff3fac5131dc9c8babae3fab4ea9885b682a"},
+    {file = "torchvision-0.11.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:4e41b0a35587d2284468eddff31642704d4b218ea0e5505bb60881a94d2688e6"},
+    {file = "torchvision-0.11.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:5dec0014240f93c17837b37a194c6a35ba99da9c3b7c5b8341f7fb2bcc676e04"},
+    {file = "torchvision-0.11.1-cp38-cp38-win_amd64.whl", hash = "sha256:99c92a02832e84e51c47e303a76e57e09776abf5009b046e9269ea7387d5aadb"},
+    {file = "torchvision-0.11.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:18f9e1d571be810ee9a4b8604f88748e5eb4e545171f0167ad734bf080eacf2d"},
+    {file = "torchvision-0.11.1-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:6ac7aa49f81cdab4176131c3004bc86a5e5525d0be430172c78e6e2bb604e675"},
+    {file = "torchvision-0.11.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:8bb26e3856f163d9fe9287ad19105e93368e1c1d70d58101a9370d0acdb12865"},
+    {file = "torchvision-0.11.1-cp39-cp39-win_amd64.whl", hash = "sha256:11e0b162f7a8ee7fa959b9e0f2a15fb858af0b2e6f79f5a0527db55327241d26"},
+]
+tqdm = [
+    {file = "tqdm-4.62.3-py2.py3-none-any.whl", hash = "sha256:8dd278a422499cd6b727e6ae4061c40b48fce8b76d1ccbf5d34fca9b7f925b0c"},
+    {file = "tqdm-4.62.3.tar.gz", hash = "sha256:d359de7217506c9851b7869f3708d8ee53ed70a1b8edbba4dbcb47442592920d"},
+]
+typing-extensions = [
+    {file = "typing_extensions-4.0.0-py3-none-any.whl", hash = "sha256:829704698b22e13ec9eaf959122315eabb370b0884400e9818334d8b677023d9"},
+    {file = "typing_extensions-4.0.0.tar.gz", hash = "sha256:2cdf80e4e04866a9b3689a51869016d36db0814d84b8d8a568d22781d45d27ed"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},

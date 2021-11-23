@@ -37,7 +37,7 @@ AREAS = [
 ]
 
 def main():
-    basedir = pathlib.Path(__file__).parent
+    basedir = pathlib.Path(__file__).parent.parent / 'data'
     for district, area in AREAS:
         towns = get_town(district, area)
 
