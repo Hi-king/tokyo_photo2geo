@@ -34,7 +34,7 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
             if phase == 'train':
                 model.train()  # 学習モード。dropoutなどを行う。
             else:
-                model.val()  # 推論モード。dropoutなどを行わない。
+                model.eval()  # 推論モード。dropoutなどを行わない。
 
             running_loss = 0.0
             running_corrects = 0
@@ -72,9 +72,9 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
 
             # サンプル数で割って平均を求めます。
             # 辞書にサンプル数を入れたのが生きてきます。
-            epoch_loss = running_loss / data_size[phase]
+            epoch_loss = running_loss / data_size
             #GPUなしの場合item()不要
-            epoch_acc = running_corrects.item() / data_size[phase]
+            epoch_acc = running_corrects.item() / data_size
 
             #リストに途中経過を格納
             print(f'[{phase}{len(loss_dict[phase])}] loss {epoch_loss}, acc {epoch_acc}')
@@ -125,7 +125,6 @@ def main(batch_size=10, train_ratio=0.9):
 
     train_size = int(train_ratio * len(dataset))
     val_size = len(dataset) - train_size
-    data_size = {"train": train_size, "val": val_size}
     data_train, data_val = torch.utils.data.random_split(dataset, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
