@@ -10,7 +10,7 @@ import copy
 from torchvision import transforms
 
 
-def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_epochs=25):
+def train_model(model, criterion, optimizer, dataloaders, data_size, scheduler=None, num_epochs=25):
     #:bool値を返す。
     use_gpu = torch.cuda.is_available()
     #始まりの時間
@@ -39,7 +39,7 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
             running_loss = 0.0
             running_corrects = 0
             data_loader = dataloaders[phase]
-            data_size = len(data_loader)
+            data_size = data_size[phase]
 
             for data in tqdm.tqdm(data_loader):
                 inputs, labels = data  #ImageFolderで作成したデータは、
@@ -125,6 +125,7 @@ def main(batch_size=10, train_ratio=0.9):
 
     train_size = int(train_ratio * len(dataset))
     val_size = len(dataset) - train_size
+    data_size = {"train": train_size, "val": val_size}
     data_train, data_val = torch.utils.data.random_split(dataset, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
@@ -141,7 +142,7 @@ def main(batch_size=10, train_ratio=0.9):
     criterion = torch.nn.CrossEntropyLoss()
     # criterion = nn.CrossEntropyLoss().cuda() #GPUなしの場合は.cuda()はいらない。
 
-    model_ft, loss, acc = train_model(model, criterion, optim, num_epochs=epoch, dataloaders=dataloaders)
+    model_ft, loss, acc = train_model(model, criterion, optim, data_size=data_size, num_epochs=epoch, dataloaders=dataloaders)
 
 
 if __name__ == '__main__':
