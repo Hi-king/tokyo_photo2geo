@@ -5,7 +5,10 @@ description = ""
 authors = ["Hi-king <hikingko1@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7,<3.11"
+requests = "^2.26.0"
+pillow = "^8.4.0"
+numpy = "^1.21.4"
 
 [tool.poetry.dev-dependencies]
 
