@@ -10,13 +10,15 @@ import pathlib
 import pandas as pd
 import sklearn.metrics
 
-KEY=os.environ.get('KEY')
+KEY = os.environ.get('KEY')
 assert KEY is not None
 
+
 def get_image(latitude, longitude, heading=0):
-    url =f'https://maps.googleapis.com/maps/api/streetview?location={latitude},{longitude}&size=456x456&key={KEY}&heading={heading}'
+    url = f'https://maps.googleapis.com/maps/api/streetview?location={latitude},{longitude}&size=456x456&key={KEY}&heading={heading}'
     d = requests.get(url)
     return PIL.Image.open(io.BytesIO(d.content))
+
 
 def uniform_random_noise(n):
     for _ in range(n):
@@ -26,15 +28,18 @@ def uniform_random_noise(n):
         y = length * np.sin(angle)
         yield (x, y)
 
+
 def get_town(district, area):
     d = requests.get(f'https://geolonia.github.io/japanese-addresses/api/ja/{district}/{area}.json')
     df = pd.DataFrame(d.json())
     return df
 
+
 AREAS = [
     ('東京都', '中央区'),
     ('東京都', '港区'),
 ]
+
 
 def main():
     basedir = pathlib.Path(__file__).parent.parent / 'data'
@@ -48,7 +53,7 @@ def main():
             print(row.town)
             seed = int(hashlib.sha1(row.town.encode("UTF-8")).hexdigest(), 16) % 2**32
             np.random.seed(seed)
-            target_dir = basedir / (district+area) / row.town
+            target_dir = basedir / (district + area) / row.town
             target_dir.mkdir(exist_ok=True, parents=True)
             center_lat, center_lng = row.lat, row.lng
             for x, y in uniform_random_noise(10):

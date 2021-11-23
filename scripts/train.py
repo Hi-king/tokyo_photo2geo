@@ -9,6 +9,7 @@ import tqdm
 import copy
 from torchvision import transforms
 
+
 def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_epochs=25):
     #:bool値を返す。
     use_gpu = torch.cuda.is_available()
@@ -19,11 +20,11 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
     best_acc = 0.0
 
     #途中経過保存用に、リストを持った辞書を作ります。
-    loss_dict ={"train" : [],  "val" : []}
-    acc_dict = {"train" : [],  "val" : []}  
+    loss_dict = {"train": [], "val": []}
+    acc_dict = {"train": [], "val": []}
 
     for epoch in range(num_epochs):
-        if (epoch+1)%5 == 0:#５回に１回エポックを表示します。
+        if (epoch + 1) % 5 == 0:  #５回に１回エポックを表示します。
             print('Epoch {}/{}'.format(epoch, num_epochs - 1))
             print('-' * 10)
 
@@ -31,7 +32,7 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
         # 辞書に入れた威力がここで発揮され、trainもvalも１回で書く事ができます。
         for phase in ['train', 'val']:
             if phase == 'train':
-                model.train()   # 学習モード。dropoutなどを行う。
+                model.train()  # 学習モード。dropoutなどを行う。
             else:
                 model.val()  # 推論モード。dropoutなどを行わない。
 
@@ -41,8 +42,8 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
             data_size = len(data_loader)
 
             for data in tqdm.tqdm(data_loader):
-                inputs, labels = data #ImageFolderで作成したデータは、
-                                      #データをラベルを持ってくれます。
+                inputs, labels = data  #ImageFolderで作成したデータは、
+                #データをラベルを持ってくれます。
 
                 #GPUを使わない場合不要
                 if use_gpu:
@@ -52,9 +53,9 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
                 outputs = model(inputs)
 
                 _, preds = torch.max(outputs.data, 1)
-               #torch.maxは実際の値とインデクスを返します。
-               #torch.max((0.8, 0.1),1)=> (0.8, 0)
-               #引数の1は行方向、列方向、どちらの最大値を返すか、です。
+                #torch.maxは実際の値とインデクスを返します。
+                #torch.max((0.8, 0.1),1)=> (0.8, 0)
+                #引数の1は行方向、列方向、どちらの最大値を返すか、です。
                 loss = criterion(outputs, labels)
 
                 if phase == 'train':
@@ -63,12 +64,11 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
                     optimizer.step()
 
                 # statistics #GPUなしの場合item()不要
-                running_loss += loss.item() * inputs.size(0) 
+                running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels)
                 # (preds == labels)は[True, True, False]などをかえしますが、
                 # pythonのTrue, Falseはそれぞれ1, 0に対応しているので、
                 # sumで合計する事ができます。
-
 
             # サンプル数で割って平均を求めます。
             # 辞書にサンプル数を入れたのが生きてきます。
@@ -90,7 +90,7 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
                 best_model_wts = copy.deepcopy(model.state_dict())
             # deepcopyをしないと、model.state_dict()の中身の変更に伴い、
             # コピーした（はずの）データも変わってしまいます。
-            # copyとdeepcopyの違いはこの記事がわかりやすいです。 
+            # copyとdeepcopyの違いはこの記事がわかりやすいです。
             # https://www.headboost.jp/python-copy-deepcopy/
 
     time_elapsed = time.time() - since
@@ -103,32 +103,34 @@ def train_model(model, criterion, optimizer, dataloaders, scheduler=None, num_ep
 
 
 transform_dict = {
-        'train': transforms.Compose(
-            [transforms.Resize((256,256)),
-             transforms.RandomHorizontalFlip(),
-             transforms.ToTensor(),
-             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                  std=[0.229, 0.224, 0.225]),
-             ]),
-        'test': transforms.Compose(
-            [transforms.Resize((256,256)),
-             transforms.ToTensor(),
-             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                  std=[0.229, 0.224, 0.225]),
-             ])}
+    'train':
+    transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]),
+    'test':
+    transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+}
+
 
 def main(batch_size=10, train_ratio=0.9):
     basedir = pathlib.Path(__file__).parent.parent / 'data'
     dataset = torchvision.datasets.ImageFolder(root=basedir, transform=transform_dict['test'])
 
     train_size = int(train_ratio * len(dataset))
-    val_size  = len(dataset) - train_size
-    data_size  = {"train":train_size, "val":val_size}
+    val_size = len(dataset) - train_size
+    data_size = {"train": train_size, "val": val_size}
     data_train, data_val = torch.utils.data.random_split(dataset, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
-    val_loader   = torch.utils.data.DataLoader(data_val,   batch_size=batch_size, shuffle=False)
-    dataloaders  = {"train":train_loader, "val":val_loader}
+    val_loader = torch.utils.data.DataLoader(data_val, batch_size=batch_size, shuffle=False)
+    dataloaders = {"train": train_loader, "val": val_loader}
 
     model = torchvision.models.resnet18(pretrained=True)
     model.fc = torch.nn.Linear(512, 2)
@@ -140,8 +142,8 @@ def main(batch_size=10, train_ratio=0.9):
     criterion = torch.nn.CrossEntropyLoss()
     # criterion = nn.CrossEntropyLoss().cuda() #GPUなしの場合は.cuda()はいらない。
 
-
     model_ft, loss, acc = train_model(model, criterion, optim, num_epochs=epoch, dataloaders=dataloaders)
+
 
 if __name__ == '__main__':
     fire.Fire(main)
