@@ -10,6 +10,7 @@ requests = "^2.26.0"
 pillow = "^8.4.0"
 numpy = "^1.21.4"
 pandas = "*"
+fire = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 
