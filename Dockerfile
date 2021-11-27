@@ -8,7 +8,8 @@ RUN pip install -U pip &&\
     poetry install &&\
     rm -rf ~/.cache
 
-ADD photo2geo .
-ADD scripts .
+ADD photo2geo photo2geo/
+RUN poetry install
+ADD scripts scripts/
 
 CMD ["python", "-c", "print('hello')"]

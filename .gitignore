@@ -1,6 +1,9 @@
 *.ipynb
 *.png
 .DS_Store
+private
+k8s
+
 ### https://raw.github.com/github/gitignore/499ae899e7b54e701e878759f73d9092302fd07a/Python.gitignore
 
 # Byte-compiled / optimized / DLL files

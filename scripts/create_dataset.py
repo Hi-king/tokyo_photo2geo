@@ -41,7 +41,7 @@ AREAS = [
 ]
 
 
-def main():
+def main(sample_per_town=10):
     basedir = pathlib.Path(__file__).parent.parent / 'data'
     for district, area in AREAS:
         towns = get_town(district, area)
@@ -56,7 +56,7 @@ def main():
             target_dir = basedir / (district + area) / row.town
             target_dir.mkdir(exist_ok=True, parents=True)
             center_lat, center_lng = row.lat, row.lng
-            for x, y in uniform_random_noise(10):
+            for x, y in uniform_random_noise(sample_per_town):
                 lat = center_lat + x * r
                 lng = center_lng + y * r
                 heading = np.random.randint(180)

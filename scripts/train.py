@@ -10,7 +10,7 @@ import copy
 from torchvision import transforms
 
 
-def train_model(model, criterion, optimizer, dataloaders, data_size, scheduler=None, num_epochs=25):
+def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=None, num_epochs=25):
     #:bool値を返す。
     use_gpu = torch.cuda.is_available()
     #始まりの時間
@@ -39,7 +39,7 @@ def train_model(model, criterion, optimizer, dataloaders, data_size, scheduler=N
             running_loss = 0.0
             running_corrects = 0
             data_loader = dataloaders[phase]
-            data_size = data_size[phase]
+            data_size = data_sizes[phase]
 
             for data in tqdm.tqdm(data_loader):
                 inputs, labels = data  #ImageFolderで作成したデータは、
@@ -81,8 +81,6 @@ def train_model(model, criterion, optimizer, dataloaders, data_size, scheduler=N
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
 
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
-
             # deep copy the model
             # 精度が改善したらモデルを保存する
             if phase == 'val' and epoch_acc > best_acc:
@@ -119,13 +117,14 @@ transform_dict = {
 }
 
 
-def main(batch_size=10, train_ratio=0.9):
+def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5):
+    use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / 'data'
     dataset = torchvision.datasets.ImageFolder(root=basedir, transform=transform_dict['test'])
 
     train_size = int(train_ratio * len(dataset))
     val_size = len(dataset) - train_size
-    data_size = {"train": train_size, "val": val_size}
+    data_sizes = {"train": train_size, "val": val_size}
     data_train, data_val = torch.utils.data.random_split(dataset, [train_size, val_size])
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
@@ -135,14 +134,17 @@ def main(batch_size=10, train_ratio=0.9):
     model = torchvision.models.resnet18(pretrained=True)
     model.fc = torch.nn.Linear(512, 2)
 
-    # model = model.cuda()　#GPUなしの場合はこの行はいらない。
-    lr = 1e-4
+    if use_gpu:
+        model = model.cuda()
     epoch = 40
-    optim = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
-    criterion = torch.nn.CrossEntropyLoss()
-    # criterion = nn.CrossEntropyLoss().cuda() #GPUなしの場合は.cuda()はいらない。
+    optim = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    if use_gpu:
+        criterion = torch.nn.CrossEntropyLoss().cuda()
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
 
-    model_ft, loss, acc = train_model(model, criterion, optim, data_size=data_size, num_epochs=epoch, dataloaders=dataloaders)
+
+    model_ft, loss, acc = train_model(model, criterion, optim, data_sizes=data_sizes, num_epochs=epoch, dataloaders=dataloaders)
 
 
 if __name__ == '__main__':
