@@ -1,4 +1,5 @@
 from pandas.core import frame
+from pandas.core.indexes.base import Index
 import photo2geo
 import fire
 import pathlib
@@ -11,6 +12,7 @@ import copy
 from torchvision import transforms
 import datetime
 import pandas as pd
+import sklearn.metrics
 
 
 def train_model(model, criterion, optimizer, dataloaders, data_sizes, results_dir: pathlib.Path, num_epochs=25):
@@ -35,12 +37,13 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, results_di
 
             running_loss = 0.0
             running_corrects = 0
+            epoch_predicts = []
+            epoch_labels = []
             data_loader = dataloaders[phase]
             data_size = data_sizes[phase]
 
             for data in tqdm.tqdm(data_loader):
-                inputs, labels = data  #ImageFolderで作成したデータは、
-                #データをラベルを持ってくれます。
+                inputs, labels = data
 
                 if use_gpu:
                     inputs = inputs.cuda()
@@ -60,12 +63,21 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, results_di
 
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels)
+                epoch_predicts += preds.tolist()
+                epoch_labels += labels
 
             epoch_loss = running_loss / data_size
             epoch_acc = running_corrects.item() / data_size
 
-            #リストに途中経過を格納
+            # Result
             print(f'[{phase}{len(loss_dict[phase])}] loss {epoch_loss}, acc {epoch_acc}')
+            confusion_matrix = pd.DataFrame(
+                sklearn.metrics.confusion_matrix(epoch_predicts, epoch_labels),
+                index=data_loader.dataset.dataset.classes,
+                columns=data_loader.dataset.dataset.classes,
+            )
+            print(confusion_matrix)
+
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
 
