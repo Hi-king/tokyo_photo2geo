@@ -17,7 +17,11 @@ assert KEY is not None
 def get_image(latitude, longitude, heading=0):
     url = f'https://maps.googleapis.com/maps/api/streetview?location={latitude},{longitude}&size=456x456&key={KEY}&heading={heading}'
     d = requests.get(url)
-    return PIL.Image.open(io.BytesIO(d.content))
+    if d.status_code == 200:
+        return PIL.Image.open(io.BytesIO(d.content))
+    else:
+        print(d.status_code)
+        return None
 
 
 def uniform_random_noise(n):
@@ -38,6 +42,7 @@ def get_town(district, area):
 AREAS = [
     ('東京都', '中央区'),
     ('東京都', '港区'),
+    ('北海道', '旭川市'),
 ]
 
 
@@ -63,7 +68,8 @@ def main(sample_per_town=10):
                 path: pathlib.Path = target_dir / f'{lat}{lng}{heading}.png'
                 if not path.exists():
                     img = get_image(lat, lng, heading=heading)
-                    img.save(path)
+                    if img is not None:
+                        img.save(path)
 
 
 if __name__ == '__main__':

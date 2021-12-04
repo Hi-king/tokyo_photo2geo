@@ -103,7 +103,10 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=
 transform_dict = {
     'train':
     transforms.Compose([
-        transforms.Resize((256, 256)),
+        # transforms.Resize((256, 256)),
+        transforms.RandomResizedCrop(
+            (256, 256), 
+            scale=(0.5, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -117,10 +120,13 @@ transform_dict = {
 }
 
 
-def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5):
+def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5, epoch=40):
     use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / 'data'
     dataset = torchvision.datasets.ImageFolder(root=basedir, transform=transform_dict['test'])
+    classnum = len(dataset.classes)
+    print(dataset.classes)
+
 
     train_size = int(train_ratio * len(dataset))
     val_size = len(dataset) - train_size
@@ -132,11 +138,10 @@ def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5):
     dataloaders = {"train": train_loader, "val": val_loader}
 
     model = torchvision.models.resnet18(pretrained=True)
-    model.fc = torch.nn.Linear(512, 2)
+    model.fc = torch.nn.Linear(512, classnum)
 
     if use_gpu:
         model = model.cuda()
-    epoch = 40
     optim = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     if use_gpu:
         criterion = torch.nn.CrossEntropyLoss().cuda()
