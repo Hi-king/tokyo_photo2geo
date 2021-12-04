@@ -1,5 +1,3 @@
-from pandas.core import frame
-from pandas.core.indexes.base import Index
 import photo2geo
 import fire
 import pathlib
@@ -143,7 +141,7 @@ def main(
     use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / "data"
     dataset: torchvision.datasets.ImageFolder = torchvision.datasets.ImageFolder(
-        root=basedir, transform=transform_dict["test"]
+        root=basedir
     )
     classnum = len(dataset.classes)
     print(dataset.classes)
@@ -160,6 +158,8 @@ def main(
     data_train, data_val = torch.utils.data.random_split(
         dataset, [train_size, val_size]
     )
+    data_train.dataset.transform = transform_dict["train"]
+    data_val.dataset.transform = transform_dict["test"]
 
     # save data split
     filename_df = pd.DataFrame(dataset.imgs).assign(trainval="None")
