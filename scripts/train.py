@@ -1,3 +1,4 @@
+from pandas.core import frame
 import photo2geo
 import fire
 import pathlib
@@ -8,18 +9,16 @@ import time
 import tqdm
 import copy
 from torchvision import transforms
+import datetime
+import pandas as pd
 
 
-def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=None, num_epochs=25):
-    #:bool値を返す。
+def train_model(model, criterion, optimizer, dataloaders, data_sizes, results_dir: pathlib.Path, num_epochs=25):
     use_gpu = torch.cuda.is_available()
-    #始まりの時間
     since = time.time()
-
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-    #途中経過保存用に、リストを持った辞書を作ります。
     loss_dict = {"train": [], "val": []}
     acc_dict = {"train": [], "val": []}
 
@@ -28,8 +27,6 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=
             print('Epoch {}/{}'.format(epoch, num_epochs - 1))
             print('-' * 10)
 
-        # それぞれのエポックで、train, valを実行します。
-        # 辞書に入れた威力がここで発揮され、trainもvalも１回で書く事ができます。
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # 学習モード。dropoutなどを行う。
@@ -45,11 +42,9 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=
                 inputs, labels = data  #ImageFolderで作成したデータは、
                 #データをラベルを持ってくれます。
 
-                #GPUを使わない場合不要
                 if use_gpu:
                     inputs = inputs.cuda()
                     labels = labels.cuda()
-                #~~~~~~~~~~~~~~forward~~~~~~~~~~~~~~~
                 outputs = model(inputs)
 
                 _, preds = torch.max(outputs.data, 1)
@@ -63,17 +58,10 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=
                     loss.backward()
                     optimizer.step()
 
-                # statistics #GPUなしの場合item()不要
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == labels)
-                # (preds == labels)は[True, True, False]などをかえしますが、
-                # pythonのTrue, Falseはそれぞれ1, 0に対応しているので、
-                # sumで合計する事ができます。
 
-            # サンプル数で割って平均を求めます。
-            # 辞書にサンプル数を入れたのが生きてきます。
             epoch_loss = running_loss / data_size
-            #GPUなしの場合item()不要
             epoch_acc = running_corrects.item() / data_size
 
             #リストに途中経過を格納
@@ -81,15 +69,14 @@ def train_model(model, criterion, optimizer, dataloaders, data_sizes, scheduler=
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
 
-            # deep copy the model
-            # 精度が改善したらモデルを保存する
+            # save
+            torch.save(
+                copy.deepcopy(model).to('cpu').state_dict(),
+                results_dir / f'model_epoch{epoch}.pth'
+            )
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
-            # deepcopyをしないと、model.state_dict()の中身の変更に伴い、
-            # コピーした（はずの）データも変わってしまいます。
-            # copyとdeepcopyの違いはこの記事がわかりやすいです。
-            # https://www.headboost.jp/python-copy-deepcopy/
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
@@ -123,15 +110,22 @@ transform_dict = {
 def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5, epoch=40):
     use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / 'data'
-    dataset = torchvision.datasets.ImageFolder(root=basedir, transform=transform_dict['test'])
+    dataset: torchvision.datasets.ImageFolder = torchvision.datasets.ImageFolder(root=basedir, transform=transform_dict['test'])
     classnum = len(dataset.classes)
     print(dataset.classes)
-
+    resultdir = pathlib.Path(__file__).parent.parent / 'results' / f'class{classnum}_batch{batch_size}_lr{lr}_{datetime.datetime.now().strftime("%Y%m%d%H%M")}'
+    resultdir.mkdir(parents=True, exist_ok=True)
 
     train_size = int(train_ratio * len(dataset))
     val_size = len(dataset) - train_size
     data_sizes = {"train": train_size, "val": val_size}
     data_train, data_val = torch.utils.data.random_split(dataset, [train_size, val_size])
+    
+    # save data split
+    filename_df = pd.DataFrame(dataset.imgs).assign(trainval="None")
+    filename_df.loc[data_train.indices, 'trainval'] = 'train'
+    filename_df.loc[data_val.indices, 'trainval'] = 'val'
+    filename_df.to_csv(resultdir / 'datasplit.csv')
 
     train_loader = torch.utils.data.DataLoader(data_train, batch_size=batch_size, shuffle=True)
     val_loader = torch.utils.data.DataLoader(data_val, batch_size=batch_size, shuffle=False)
@@ -149,7 +143,7 @@ def main(batch_size=10, train_ratio=0.9, lr=1e-4, weight_decay=1e-5, epoch=40):
         criterion = torch.nn.CrossEntropyLoss()
 
 
-    model_ft, loss, acc = train_model(model, criterion, optim, data_sizes=data_sizes, num_epochs=epoch, dataloaders=dataloaders)
+    model_ft, loss, acc = train_model(model, criterion, optim, data_sizes=data_sizes, num_epochs=epoch, dataloaders=dataloaders, results_dir=resultdir)
 
 
 if __name__ == '__main__':
