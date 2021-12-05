@@ -1,3 +1,4 @@
+from numpy.core.numeric import indices
 import photo2geo
 import fire
 import pathlib
@@ -12,6 +13,7 @@ import datetime
 import pandas as pd
 import sklearn.metrics
 import os
+import numpy as np
 
 
 def train_model(
@@ -43,19 +45,26 @@ def train_model(
                 model.eval()  # 推論モード。dropoutなどを行わない。
 
             running_loss = 0.0
-            running_corrects = 0
             epoch_predicts = []
+            epoch_scores = None
             epoch_labels = []
+            epoch_indices = []
             data_loader = dataloaders[phase]
             data_size = data_sizes[phase]
+            classes = data_loader.dataset.dataset.dataset.classes
 
             for data in tqdm.tqdm(data_loader):
-                inputs, labels = data
+                inputs, labels, indices = data
 
                 if use_gpu:
                     inputs = inputs.cuda()
                     labels = labels.cuda()
-                outputs = model(inputs)
+
+                if phase == 'train':
+                    outputs = model(inputs)
+                else:
+                    with torch.inference_mode():
+                        outputs = model(inputs)
 
                 _, preds = torch.max(outputs.data, 1)
                 loss = criterion(outputs, labels)
@@ -66,24 +75,48 @@ def train_model(
                     optimizer.step()
 
                 running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels)
+                # running_corrects += torch.sum(preds == labels)
+                epoch_scores = (
+                    outputs.cpu().data.numpy()
+                    if epoch_scores is None
+                    else np.concatenate([epoch_scores, outputs.cpu().data.numpy()], axis=0)
+                )
                 epoch_predicts += preds.tolist()
                 epoch_labels += labels.tolist()
+                epoch_indices += indices.tolist()
 
             epoch_loss = running_loss / data_size
-            epoch_acc = running_corrects.item() / data_size
 
             # Result
-            acc = sklearn.metrics.accuracy_score(epoch_labels, epoch_predicts)
+            epoch_acc = sklearn.metrics.accuracy_score(epoch_labels, epoch_predicts)
             print(
-                f"[{phase}{len(loss_dict[phase])}] loss {epoch_loss}, acc {epoch_acc}, acc {acc}"
+                f"[{phase}{len(loss_dict[phase])}] loss {epoch_loss}, acc {epoch_acc}"
             )
             confusion_matrix = pd.DataFrame(
                 sklearn.metrics.confusion_matrix(epoch_labels, epoch_predicts),
-                index=data_loader.dataset.dataset.classes,
-                columns=data_loader.dataset.dataset.classes,
+                index=classes,
+                columns=classes,
             )
             print(confusion_matrix)
+            result_df = pd.DataFrame(
+                dict(
+                    predict=epoch_predicts,
+                    label=epoch_labels,
+                    file_index=epoch_indices,
+                    **{
+                        f"score[{classes[i]}]": epoch_scores[:, i]
+                        for i in range(epoch_scores.shape[1])
+                    },
+                )
+            ).assign(
+                file=lambda df: df.file_index.map(
+                    lambda i: data_loader.dataset.dataset.dataset.imgs[i][0]
+                ),
+                labels_file=lambda df: df.file_index.map(
+                    lambda i: data_loader.dataset.dataset.dataset.imgs[i][1]
+                ),
+            )
+            result_df.to_csv(results_dir / f"result_epoch{epoch}.csv")
 
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
@@ -105,7 +138,6 @@ def train_model(
     )
     print("Best val acc: {:.4f}".format(best_acc))
 
-    # 最良のウェイトを読み込んで、返す。
     model.load_state_dict(best_model_wts)
     return model, loss_dict, acc_dict
 
@@ -137,18 +169,19 @@ def main(
     weight_decay=1e-5,
     epoch=40,
     model="resnet18",
+    num_workers=os.cpu_count()
 ):
     use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / "data"
-    dataset: torchvision.datasets.ImageFolder = torchvision.datasets.ImageFolder(
-        root=basedir
+    dataset = photo2geo.data.DatasetWithIndex(
+        torchvision.datasets.ImageFolder(root=basedir)
     )
     classnum = len(dataset.classes)
     print(dataset.classes)
     resultdir = (
         pathlib.Path(__file__).parent.parent
         / "results"
-        / f'class{classnum}_batch{batch_size}_lr{lr}_{datetime.datetime.now().strftime("%Y%m%d%H%M")}'
+        / f'class{classnum}_{model}_batch{batch_size}_lr{lr}_{datetime.datetime.now().strftime("%Y%m%d%H%M")}'
     )
     resultdir.mkdir(parents=True, exist_ok=True)
 
@@ -158,29 +191,32 @@ def main(
     data_train, data_val = torch.utils.data.random_split(
         dataset, [train_size, val_size]
     )
-    data_train.dataset.transform = transform_dict["train"]
-    data_val.dataset.transform = transform_dict["test"]
+    data_train.dataset.dataset.transform = transform_dict["train"]
+    data_val.dataset.dataset.transform = transform_dict["test"]
 
     # save data split
-    filename_df = pd.DataFrame(dataset.imgs).assign(trainval="None")
+    filename_df = pd.DataFrame(dataset.dataset.imgs).assign(trainval="None")
     filename_df.loc[data_train.indices, "trainval"] = "train"
     filename_df.loc[data_val.indices, "trainval"] = "val"
     filename_df.to_csv(resultdir / "datasplit.csv")
 
     train_loader = torch.utils.data.DataLoader(
-        data_train, batch_size=batch_size, shuffle=True, num_workers=os.cpu_count()
+        data_train, batch_size=batch_size, shuffle=True, num_workers=num_workers
     )
     val_loader = torch.utils.data.DataLoader(
-        data_val, batch_size=batch_size, shuffle=False
+        data_val, batch_size=batch_size, shuffle=False, num_workers=num_workers
     )
     dataloaders = {"train": train_loader, "val": val_loader}
 
     # model setup
     if model == "resnet18":
         model = torchvision.models.resnet18(pretrained=True)
+        model.fc = torch.nn.Linear(512, classnum)
+    elif model == "resnet50":
+        model = torchvision.models.resnet50(pretrained=True)
+        model.fc = torch.nn.Linear(2048, classnum)
     else:
         raise Exception()
-    model.fc = torch.nn.Linear(512, classnum)
 
     if use_gpu:
         model = model.cuda()

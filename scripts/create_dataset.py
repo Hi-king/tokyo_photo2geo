@@ -39,18 +39,21 @@ def get_town(district, area):
     return df
 
 
-AREAS = [
-    ('東京都', '中央区'),
-    ('東京都', '港区'),
-    ('北海道', '旭川市'),
-]
+AREAS = {
+    ('東京都', '中央区'): 50,
+    ('東京都', '港区'): 50,
+    ('北海道', '旭川市'): 2,
+    ('東京都', '新宿区'): 15,
+    ('東京都', '渋谷区'): 30,
+    ('東京都', '江東区'): 15,
+    ('東京都', '千代田区'): 20,
+}
 
-
-def main(sample_per_town=10):
+def main():
     basedir = pathlib.Path(__file__).parent.parent / 'data'
-    for district, area in AREAS:
-        towns = get_town(district, area)
-
+    for (district, area), sample_per_town in AREAS.items():
+        towns: pd.DataFrame = get_town(district, area)
+        towns = towns[towns.lng.notna()]
         darray = sklearn.metrics.pairwise_distances(towns[['lat', 'lng']], towns[['lat', 'lng']])
         r = darray[darray > 0.0001].min()
 
