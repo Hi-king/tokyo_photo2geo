@@ -58,6 +58,17 @@ def train_model(
             for data in tqdm.tqdm(data_loader):
                 inputs, labels, indices = data
 
+                # debug augmentation
+                # import PIL.Image
+                # print(inputs.shape)
+                # for image, index in zip(inputs, indices):
+                #     MEANS = [0, 0, 0]
+                #     print(image.max(), image.min())
+                #     img = (image.to('cpu').detach().numpy().transpose(1, 2, 0)*256 + (MEANS[2], MEANS[1], MEANS[0])).astype(np.uint8).copy()
+                #     print(data_loader.dataset.dataset.dataset.imgs[index])
+                #     PIL.Image.open(data_loader.dataset.dataset.dataset.imgs[index][0]).save(results_dir / f'{phase}_{index}_original.png')
+                #     PIL.Image.fromarray(img).save(results_dir / f'{phase}_{index}.png')
+
                 if use_gpu:
                     inputs = inputs.cuda()
                     labels = labels.cuda()
@@ -77,7 +88,6 @@ def train_model(
                     optimizer.step()
 
                 running_loss += loss.item() * inputs.size(0)
-                # running_corrects += torch.sum(preds == labels)
                 epoch_scores = (
                     outputs.cpu().data.numpy()
                     if epoch_scores is None
@@ -96,10 +106,11 @@ def train_model(
             print(
                 f"[{phase}{len(loss_dict[phase])}] loss {epoch_loss}, acc {epoch_acc}"
             )
+            sub_classes = [classes[i] for i in list(set(epoch_labels))]
             confusion_matrix = pd.DataFrame(
                 sklearn.metrics.confusion_matrix(epoch_labels, epoch_predicts),
-                index=classes,
-                columns=classes,
+                index=sub_classes,
+                columns=sub_classes,
             )
             print(confusion_matrix)
             result_df = pd.DataFrame(
@@ -195,7 +206,10 @@ def main(
     data_train, data_val = torch.utils.data.random_split(
         dataset, [train_size, val_size]
     )
+
+    # set train/test augmentation
     data_train.dataset.dataset.transform = transform_dict["train"]
+    data_val.dataset = copy.deepcopy(data_val.dataset)
     data_val.dataset.dataset.transform = transform_dict["test"]
 
     # save params
