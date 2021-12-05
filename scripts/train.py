@@ -14,6 +14,8 @@ import pandas as pd
 import sklearn.metrics
 import os
 import numpy as np
+import json
+import inspect
 
 
 def train_model(
@@ -60,7 +62,7 @@ def train_model(
                     inputs = inputs.cuda()
                     labels = labels.cuda()
 
-                if phase == 'train':
+                if phase == "train":
                     outputs = model(inputs)
                 else:
                     with torch.inference_mode():
@@ -79,7 +81,9 @@ def train_model(
                 epoch_scores = (
                     outputs.cpu().data.numpy()
                     if epoch_scores is None
-                    else np.concatenate([epoch_scores, outputs.cpu().data.numpy()], axis=0)
+                    else np.concatenate(
+                        [epoch_scores, outputs.cpu().data.numpy()], axis=0
+                    )
                 )
                 epoch_predicts += preds.tolist()
                 epoch_labels += labels.tolist()
@@ -116,7 +120,7 @@ def train_model(
                     lambda i: data_loader.dataset.dataset.dataset.imgs[i][1]
                 ),
             )
-            result_df.to_csv(results_dir / f"result_epoch{epoch}.csv")
+            result_df.to_csv(results_dir / f"result_{phase}_poch{epoch}.csv")
 
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
@@ -169,7 +173,7 @@ def main(
     weight_decay=1e-5,
     epoch=40,
     model="resnet18",
-    num_workers=os.cpu_count()
+    num_workers=os.cpu_count(),
 ):
     use_gpu = torch.cuda.is_available()
     basedir = pathlib.Path(__file__).parent.parent / "data"
@@ -193,6 +197,20 @@ def main(
     )
     data_train.dataset.dataset.transform = transform_dict["train"]
     data_val.dataset.dataset.transform = transform_dict["test"]
+
+    # save params
+    all_params = locals()
+    params = dict(
+            classes=dataset.classes,
+            **{
+                key: all_params[key]
+                for key in (inspect.getfullargspec(main).args + ["data_sizes"])
+            },
+        )
+    print(params)
+    json.dump(params,
+        (resultdir / "params.json").open("w+"), indent=2
+    )
 
     # save data split
     filename_df = pd.DataFrame(dataset.dataset.imgs).assign(trainval="None")
