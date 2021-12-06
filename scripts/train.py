@@ -16,6 +16,7 @@ import os
 import numpy as np
 import json
 import inspect
+import subprocess
 
 
 def train_model(
@@ -131,7 +132,7 @@ def train_model(
                     lambda i: data_loader.dataset.dataset.dataset.imgs[i][1]
                 ),
             )
-            result_df.to_csv(results_dir / f"result_{phase}_poch{epoch}.csv")
+            result_df.to_csv(results_dir / f"result_{phase}_epoch{epoch}.csv")
 
             loss_dict[phase].append(epoch_loss)
             acc_dict[phase].append(epoch_acc)
@@ -161,7 +162,10 @@ transform_dict = {
     "train": transforms.Compose(
         [
             # transforms.Resize((256, 256)),
+            transforms.RandomAffine(degrees=(-10, 10), translate=(0.1, 0.1), scale=(0.7, 1.2)),
             transforms.RandomResizedCrop((256, 256), scale=(0.5, 1.0)),
+            transforms.ColorJitter(brightness=0.5, contrast=0.2, saturation=0.1, hue=0.1),
+            transforms.RandomPerspective(distortion_scale=0.3, p=0.5),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -193,10 +197,15 @@ def main(
     )
     classnum = len(dataset.classes)
     print(dataset.classes)
+    git_commit_id = (
+        subprocess.check_output(["git", "rev-parse", "--short", "HEAD"])
+        .decode("ascii")
+        .strip()
+    )
     resultdir = (
         pathlib.Path(__file__).parent.parent
         / "results"
-        / f'class{classnum}_{model}_batch{batch_size}_lr{lr}_{datetime.datetime.now().strftime("%Y%m%d%H%M")}'
+        / f'class{classnum}_{model}_batch{batch_size}_lr{lr}_commit{git_commit_id}_{datetime.datetime.now().strftime("%Y%m%d%H%M")}'
     )
     resultdir.mkdir(parents=True, exist_ok=True)
 
@@ -215,16 +224,14 @@ def main(
     # save params
     all_params = locals()
     params = dict(
-            classes=dataset.classes,
-            **{
-                key: all_params[key]
-                for key in (inspect.getfullargspec(main).args + ["data_sizes"])
-            },
-        )
-    print(params)
-    json.dump(params,
-        (resultdir / "params.json").open("w+"), indent=2
+        classes=dataset.classes,
+        **{
+            key: all_params[key]
+            for key in (inspect.getfullargspec(main).args + ["data_sizes", "git_commit_id", "use_gpu"])
+        },
     )
+    print(params)
+    json.dump(params, (resultdir / "params.json").open("w+"), indent=2)
 
     # save data split
     filename_df = pd.DataFrame(dataset.dataset.imgs).assign(trainval="None")
