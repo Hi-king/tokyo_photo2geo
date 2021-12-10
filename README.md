@@ -6,7 +6,7 @@ Predict where the photo was taken from single shot image
 
 # Predict your photo
 
-TBA
+notebooks/predict.ipynb
 
 # Create your own model
 
@@ -23,4 +23,4 @@ poetry run python scripts/train.py \
 
 # References
 
-TBA
+- [機械学習で逆ストリートビューを作り、写真から港区らしさを判定する](https://www.m3tech.blog/entry/photo2geo)
