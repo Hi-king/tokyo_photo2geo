@@ -1,0 +1,24 @@
+{
+  "classes": [
+    "\u5317\u6d77\u9053\u65ed\u5ddd\u5e02",
+    "\u6771\u4eac\u90fd\u4e2d\u592e\u533a",
+    "\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a",
+    "\u6771\u4eac\u90fd\u65b0\u5bbf\u533a",
+    "\u6771\u4eac\u90fd\u6c5f\u6771\u533a",
+    "\u6771\u4eac\u90fd\u6e0b\u8c37\u533a",
+    "\u6771\u4eac\u90fd\u6e2f\u533a"
+  ],
+  "batch_size": 30,
+  "train_ratio": 0.9,
+  "lr": 1e-05,
+  "weight_decay": 0,
+  "epoch": 200,
+  "model": "resnet50",
+  "num_workers": 6,
+  "data_sizes": {
+    "train": 26432,
+    "val": 2937
+  },
+  "git_commit_id": "6241653",
+  "use_gpu": true
+}
