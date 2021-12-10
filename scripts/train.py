@@ -247,15 +247,16 @@ def main(
     )
     dataloaders = {"train": train_loader, "val": val_loader}
 
-    # model setup
-    if model == "resnet18":
-        model = torchvision.models.resnet18(pretrained=True)
-        model.fc = torch.nn.Linear(512, classnum)
-    elif model == "resnet50":
-        model = torchvision.models.resnet50(pretrained=True)
-        model.fc = torch.nn.Linear(2048, classnum)
-    else:
-        raise Exception()
+    model = photo2geo.model.load_model(model, classnum)
+    # # model setup
+    # if model == "resnet18":
+    #     model = torchvision.models.resnet18(pretrained=True)
+    #     model.fc = torch.nn.Linear(512, classnum)
+    # elif model == "resnet50":
+    #     model = torchvision.models.resnet50(pretrained=True)
+    #     model.fc = torch.nn.Linear(2048, classnum)
+    # else:
+    #     raise Exception()
 
     if use_gpu:
         model = model.cuda()
