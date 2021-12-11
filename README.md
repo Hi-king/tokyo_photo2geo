@@ -6,6 +6,13 @@ Predict where the photo was taken from single shot image
 
 # Predict your photo
 
+```
+poetry install
+poetry run python scripts/predict.py ${your_image_path}
+```
+
+or
+
 notebooks/predict.ipynb
 
 # Create your own model
