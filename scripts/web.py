@@ -19,11 +19,15 @@ def load_small_image(path):
 
 
 def pred(path, model, params):
+    def softmax(x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum(axis=0) # only difference
     i = load_small_image(path)
     with torch.inference_mode():
-        predict = model(photo2geo.transform.transform_dict["test"](i).unsqueeze(0))
-        return params["classes"][predict.argmax()]
-
+        predict = model(photo2geo.transform.transform_dict["test"](i).unsqueeze(0))[0].numpy()
+        scores = softmax(predict)
+        return params["classes"][predict.argmax()], {label: score for label, score in zip(params["classes"], scores)}
 
 def load_params(
         result_path: str = pathlib.Path(__file__).parent.parent
@@ -42,22 +46,25 @@ def load_params(
     model = model.eval()
     return model, params
 
-def predict(
-    path: str,
-    model,
-    params
-):
-    predicted = pred(path, model, params)
-    return predicted
 
-def show_cam(path, model):
+def show_cam(path, model, params, target=None):
     def image2tensor(image):
         return photo2geo.transform.transform_dict["test"](image).unsqueeze(0)
     target_layers = [model.layer4[-1]]
     cam = pytorch_grad_cam.GradCAM(model=model, target_layers=target_layers, use_cuda=False)
     input_Image = load_small_image(path)
-    grayscale_cam = cam(
-        input_tensor=image2tensor(input_Image))
+    if target is not None:
+        target_class_index = np.argwhere(np.array(params['classes']) == target).flatten()[0]
+        grayscale_cam = cam(
+            input_tensor=image2tensor(input_Image),
+            targets=[
+                pytorch_grad_cam.utils.model_targets.ClassifierOutputTarget(target_class_index)
+            ]
+        )
+    else:
+        grayscale_cam = cam(
+            input_tensor=image2tensor(input_Image)
+        )
 
     grayscale_cam = grayscale_cam[0, :]
     cam_image = pytorch_grad_cam.utils.image.show_cam_on_image(
@@ -76,11 +83,15 @@ def myapp():
         image = PIL.Image.open(file_up)
         st.image(image, caption='Uploaded Image.', use_column_width=True)
 
-        predicted = predict(file_up, model, params)
+        predicted, scores = pred(file_up, model, params)
         st.text(f'予測: {predicted}')
 
-        cam_image = show_cam(file_up, model)
-        st.image(cam_image, caption='GradCAM', use_column_width=True)
+        TOPK=3
+        cols = st.columns(TOPK)
+        for col, (key, score) in zip(cols, list(sorted(scores.items(), key=lambda x: -x[1]))[:TOPK]):
+            with col:
+                cam_image = show_cam(file_up, model, params, key)
+                st.image(cam_image, caption=f'GradCAM {key} [{score:.2f}]', use_column_width=True)
 
 if __name__ == "__main__":
     myapp()
