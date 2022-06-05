@@ -33,3 +33,4 @@ poetry run python scripts/train.py \
 # References
 
 - [機械学習で逆ストリートビューを作り、写真から港区らしさを判定する](https://www.m3tech.blog/entry/photo2geo)
+- [画像から撮影場所を当てる話 ~ 理論的背景 & どこが〇〇区らしいか ~](https://speakerdeck.com/hiking/hua-xiang-karacuo-ying-chang-suo-wodang-teruhua-li-lun-de-bei-jing-and-dokoga00qu-rasiika)
