@@ -16,12 +16,6 @@ def load_small_image(path):
     )
     return i
 
-# def pred(path, model, params):
-#     i = load_small_image(path)
-#     with torch.inference_mode():
-#         predict = model(photo2geo.transform.transform_dict["test"](i).unsqueeze(0))
-#         return params["classes"][predict.argmax()]
-
 def pred(path, model, params):
     def softmax(x):
         """Compute softmax values for each sets of scores in x."""
