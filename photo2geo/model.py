@@ -1,14 +1,14 @@
 import torch
 import torchvision
 
-def load_model(model: str, classnum: int):
+def load_model(model: str, classnum: int) -> torchvision.models.ResNet:
     # model setup
     if model == "resnet18":
-        model = torchvision.models.resnet18(pretrained=True)
-        model.fc = torch.nn.Linear(512, classnum)
+        model_impl = torchvision.models.resnet18(pretrained=True)
+        model_impl.fc = torch.nn.Linear(512, classnum)
     elif model == "resnet50":
-        model = torchvision.models.resnet50(pretrained=True)
-        model.fc = torch.nn.Linear(2048, classnum)
+        model_impl = torchvision.models.resnet50(pretrained=True)
+        model_impl.fc = torch.nn.Linear(2048, classnum)
     else:
         raise Exception()
-    return model
+    return model_impl

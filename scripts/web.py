@@ -7,8 +7,10 @@ import PIL.Image
 import torchvision
 import numpy as np
 import pytorch_grad_cam
+import pytorch_grad_cam.utils
+import pytorch_grad_cam.utils.image
 
-RESULT_PATH = pathlib.Path(__file__).parent.parent / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034"
+RESULT_PATH = (pathlib.Path(__file__).parent.parent / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034").as_posix()
 
 def load_small_image(path):
     i = PIL.Image.open(path)
@@ -30,8 +32,8 @@ def pred(path, model, params):
         return params["classes"][predict.argmax()], {label: score for label, score in zip(params["classes"], scores)}
 
 def load_params(
-        result_path: str = pathlib.Path(__file__).parent.parent
-    / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034",
+        result_path: str = (pathlib.Path(__file__).parent.parent
+    / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034").as_posix(),
 
 ):
     params = json.load((pathlib.Path(result_path) / "params.json").open())
@@ -58,7 +60,7 @@ def show_cam(path, model, params, target=None):
         grayscale_cam = cam(
             input_tensor=image2tensor(input_Image),
             targets=[
-                pytorch_grad_cam.utils.model_targets.ClassifierOutputTarget(target_class_index)
+                pytorch_grad_cam.utils.model_targets.ClassifierOutputTarget(target_class_index) # type: ignore
             ]
         )
     else:
