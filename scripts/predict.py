@@ -8,7 +8,7 @@ import fire
 
 
 def load_small_image(path):
-    i = PIL.Image.open(path)
+    i = PIL.Image.open(path).convert("RGB")
     i = torchvision.transforms.Resize((456, 456))(
         torchvision.transforms.CenterCrop(i.width)(i)
     )
