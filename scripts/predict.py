@@ -2,25 +2,8 @@ import torch
 import json
 import pathlib
 import photo2geo
-import PIL.Image
-import torchvision
 import fire
-
-
-def load_small_image(path):
-    i = PIL.Image.open(path).convert("RGB")
-    i = torchvision.transforms.Resize((456, 456))(
-        torchvision.transforms.CenterCrop(i.width)(i)
-    )
-    return i
-
-
-def pred(path, model, params):
-    i = load_small_image(path)
-    with torch.inference_mode():
-        predict = model(photo2geo.transform.transform_dict["test"](i).unsqueeze(0))
-        return params["classes"][predict.argmax()]
-
+import helper
 
 def predict(
     path: str,
@@ -37,7 +20,7 @@ def predict(
     )
     model.load_state_dict(torch.load(last_model_path))
     model = model.eval()
-    print(f'{path} -> {pred(path, model, params)}')
+    print(f'{path} -> {helper.pred(path, model, params)[0]}')
 
 
 if __name__ == "__main__":
