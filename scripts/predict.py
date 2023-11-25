@@ -24,8 +24,8 @@ def pred(path, model, params):
 
 def predict(
     path: str,
-    result_path: str = pathlib.Path(__file__).parent.parent
-    / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034",
+    result_path: str = (pathlib.Path(__file__).parent.parent
+    / "results/class7_resnet50_batch30_lr1e-05_commit6241653_202112070034").as_posix(),
 ):
     params = json.load((pathlib.Path(result_path) / "params.json").open())
     print(params)
